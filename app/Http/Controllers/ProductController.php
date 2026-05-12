@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Category;
 use App\Models\Product;
 use Illuminate\Http\Request;
 
@@ -30,24 +31,7 @@ class ProductController extends Controller
         return redirect('/products')->with('success', 'Data berhasil ditambahkan');
     }
 
-    public function update($id)
-    {
-        $product = Product::find($id);
-
-        if ($product) {
-            $product->update([
-                'name' => 'Produk Updated',
-                'price' => 200000,
-                'stock' => 6,
-                'description' => 'Data Sudah Diupdate',
-                'status' => 'habis'
-            ]);
-        }
-
-        return redirect('/products')->with('success', 'Data berhasil diupdate');
-    }
-
-    public function delete($id)
+    public function destroy($id)
     {
         $product = Product::find($id);
 
@@ -57,4 +41,52 @@ class ProductController extends Controller
 
         return redirect('/products')->with('success', 'Data berhasil dihapus');
     }
+
+    public function create()
+    {
+        $categories = Category::all();
+        return view('products.create', compact('categories'));
+    }
+
+   public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'description' => 'nullable|string',
+            'status' => 'required|in:Tersedia,Habis',
+        ]);
+
+        Product::create($validated);
+
+        return redirect('/products')->with('success', 'Produk berhasil ditambahkan');
+    }
+
+    public function edit($id)
+    {
+        $product = Product::findOrFail($id);
+        $categories = Category::all();
+        return view('products.edit', compact('product', 'categories'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $product = Product::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'category_id' => 'required|exists:categories,id',
+            'price' => 'required|numeric|min:0',
+            'stock' => 'required|integer|min:0',
+            'description' => 'nullable|string',
+            'status' => 'required|in:Tersedia,Habis',
+        ]);
+
+        $product->update($validated);
+
+        return redirect('/products')->with('success', 'Data berhasil diupdate');
+    }
 }
+     
